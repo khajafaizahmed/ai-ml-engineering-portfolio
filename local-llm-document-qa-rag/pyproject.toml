@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-rag-qa"
+version = "0.1.0"
+description = "Local document Q&A with retrieval augmented generation, source citations, and evaluation."
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.100",
+  "uvicorn>=0.23",
+  "pydantic>=2.0"
+]
+
+[project.optional-dependencies]
+full = [
+  "sentence-transformers>=2.7",
+  "chromadb>=0.5",
+  "pypdf>=4.0"
+]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+rag-ingest = "rag_app.cli:ingest_main"
+rag-ask = "rag_app.cli:ask_main"
+rag-evaluate = "rag_app.evaluate:main"

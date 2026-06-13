@@ -1,0 +1,17 @@
+{
+  "active_version": "v2",
+  "deployment_history": [
+    "v1",
+    "v2"
+  ],
+  "models": {
+    "v1": {
+      "file": "model_v1.pt",
+      "training_accuracy": 0.9300000071525574
+    },
+    "v2": {
+      "file": "model_v2.pt",
+      "training_accuracy": 0.9308333396911621
+    }
+  }
+}

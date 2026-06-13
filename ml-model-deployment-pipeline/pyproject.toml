@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ml-model-deployment-pipeline"
+version = "0.1.0"
+description = "PyTorch model deployment behind FastAPI with CI/CD, rollback, Prometheus, and Grafana."
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.100",
+  "uvicorn>=0.23",
+  "pydantic>=2.0",
+  "prometheus-client>=0.17",
+  "torch>=2.0",
+  "numpy>=1.24"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "httpx>=0.24"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+train-risk-model = "ml_service.train:main"

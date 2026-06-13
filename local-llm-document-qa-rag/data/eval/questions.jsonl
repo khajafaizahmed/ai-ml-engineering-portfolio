@@ -1,0 +1,3 @@
+{"question":"How does the system keep answers grounded in local documents?","expected_sources":["rag_architecture.md"],"expected_keywords":["citation","retrieved"]}
+{"question":"What metrics does the evaluation harness report?","expected_sources":["evaluation_guide.md"],"expected_keywords":["retrieval","hallucination"]}
+{"question":"What happens when Ollama is unavailable?","expected_sources":["ollama_setup.md"],"expected_keywords":["fallback","extractive"]}
