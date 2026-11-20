@@ -70,7 +70,8 @@ class Predictor:
 
     def load(self, model_path: str | Path) -> ModelBundle:
         path = Path(model_path)
-        checkpoint: dict[str, Any] = torch.load(path, map_location="cpu")
+        # weights_only=True: refuse to unpickle arbitrary objects from a checkpoint file
+        checkpoint: dict[str, Any] = torch.load(path, map_location="cpu", weights_only=True)
         feature_names = list(checkpoint["feature_names"])
         validate_feature_names(feature_names)
         model = RiskNet(input_dim=len(feature_names))

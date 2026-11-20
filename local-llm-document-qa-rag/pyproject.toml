@@ -19,7 +19,7 @@ full = [
   "chromadb>=0.5",
   "pypdf>=4.0"
 ]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "httpx>=0.24"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

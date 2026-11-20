@@ -4,7 +4,9 @@ import os
 import time
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Response
+import hmac
+
+from fastapi import FastAPI, Header, HTTPException, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from .features import FEATURE_NAMES
@@ -15,6 +17,8 @@ from .schemas import ModelInfoResponse, PredictionRequest, PredictionResponse, R
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MODEL_DIR = Path(os.getenv("MODEL_DIR", PROJECT_ROOT / "models"))
+# If set, /admin/rollback requires the header  X-Admin-Token: <value>
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
 
 app = FastAPI(title="PyTorch Model Deployment Service", version="0.1.0")
 registry = ModelRegistry(MODEL_DIR)
@@ -68,13 +72,16 @@ def predict(request: PredictionRequest) -> PredictionResponse:
         )
     except Exception as exc:
         REQUEST_COUNT.labels(endpoint="/predict", method="POST", status="500").inc()
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=500, detail="Prediction failed") from exc
     finally:
         PREDICTION_LATENCY.observe(time.perf_counter() - start)
 
 
 @app.post("/admin/rollback", response_model=RollbackResponse)
-def rollback() -> RollbackResponse:
+def rollback(x_admin_token: str | None = Header(default=None)) -> RollbackResponse:
+    if ADMIN_TOKEN and not hmac.compare_digest(x_admin_token or "", ADMIN_TOKEN):
+        REQUEST_COUNT.labels(endpoint="/admin/rollback", method="POST", status="401").inc()
+        raise HTTPException(status_code=401, detail="Missing or invalid X-Admin-Token")
     try:
         version = registry.rollback()
         load_active_model()
