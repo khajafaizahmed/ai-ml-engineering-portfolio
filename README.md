@@ -1,76 +1,69 @@
 ﻿# AI/ML Engineering Portfolio
 
-![CI](https://github.com/khajafaizahmed/ai-ml-engineering-portfolio/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/khajafaizahmed/ai-ml-engineering-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/khajafaizahmed/ai-ml-engineering-portfolio/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 
-A collection of production-oriented Python projects covering retrieval-augmented generation, machine learning model serving, and security event detection. The repository emphasizes tested code, reproducible local execution, CI, containerized services, and monitoring assets.
+Three small, self-contained Python services that cover the parts of ML engineering that happen
+*around* a model: retrieval and grounding, serving and rollback, and streaming detection with
+monitoring. Each one runs locally with no API keys or external services, has tests that run in CI,
+and ships with Docker and Prometheus/Grafana config for the "full" setup.
 
-## Projects
-
-| Project | Focus | Highlights |
+| Project | What it does | Stack |
 |---|---|---|
-| `local-llm-document-qa-rag` | Retrieval-augmented document question answering | Document loading, chunking, embeddings, vector search, citation-aware answers, CLI/API, evaluation tests |
-| `ml-model-deployment-pipeline` | ML model training and serving | PyTorch model, FastAPI service, model registry, rollback support, Prometheus metrics, Grafana dashboard |
-| `real-time-security-log-detection-pipeline` | Security log parsing and detection | SSH auth-log parser, sliding-window detection rules, offline demo, streaming components, monitoring dashboard |
+| [**Local RAG Document Q&A**](local-llm-document-qa-rag/) | Indexes local documents and answers questions with source citations. Uses a local LLM (Ollama) when available, and a deterministic extractive answerer when not. Includes an evaluation harness. | FastAPI · Ollama · ChromaDB / JSON store · sentence-transformers |
+| [**ML Model Deployment Pipeline**](ml-model-deployment-pipeline/) | Trains a PyTorch risk classifier, serves it behind FastAPI with a versioned model registry and one-call rollback, and exports latency, throughput and feature-drift metrics. | PyTorch · FastAPI · Prometheus · Grafana · Docker Compose |
+| [**Real-Time Security Log Detection**](real-time-security-log-detection-pipeline/) | Parses OpenSSH auth logs and flags brute-force attempts, logins from new IPs, and logins from many IPs in a short window. Runs offline on a file or as a Kafka consumer. | Kafka (Redpanda) · Prometheus · Grafana · Docker Compose |
 
-## Repository Structure
+## Try one
 
-```text
-.github/workflows/ci.yml
-docs/project-overview.pdf
-local-llm-document-qa-rag/
-ml-model-deployment-pipeline/
-real-time-security-log-detection-pipeline/
-run_all_tests.ps1
-run_all_tests.sh
-```
-
-## Run All Tests
-
-Windows PowerShell:
-
-```powershell
-.\run_all_tests.ps1
-```
-
-Linux/macOS:
-
-```bash
-./run_all_tests.sh
-```
-
-GitHub Actions also runs the test suites for all three projects on push and pull request.
-
-## Local Review
-
-Each project has its own README with setup and usage details.
-
-```bash
-cd local-llm-document-qa-rag
-pip install -e ".[dev]"
-python -m unittest discover -s tests
-```
-
-```bash
-cd ml-model-deployment-pipeline
-pip install -e ".[dev]"
-python -m pytest -q
-```
+Each project installs on its own. For example, the security pipeline needs nothing but Python:
 
 ```bash
 cd real-time-security-log-detection-pipeline
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-python -m unittest discover -s tests
 python -m security_pipeline.offline_demo --input data/sample_auth.log --output alerts.jsonl
+# {"events_processed": 9, "alerts_emitted": 4, ...}
 ```
 
-## Architecture Notes
+Every project README has a quick start, sample output, an API/CLI reference, and its known limitations.
 
-A high-level architecture and implementation overview is available here:
+## Run all the tests
+
+```bash
+./run_all_tests.sh        # Linux/macOS
+.\run_all_tests.ps1       # Windows PowerShell
+```
+
+Both scripts expect each project's dependencies to be installed (`pip install -e ".[dev]"` in each folder).
+GitHub Actions runs all three suites on every push and pull request ([`ci.yml`](.github/workflows/ci.yml)).
+
+| Project | Tests |
+|---|---|
+| Local RAG Document Q&A | chunking, retrieval + citations, evaluation metrics, API ingest/ask and path restriction |
+| ML Model Deployment Pipeline | feature ordering, registry rollback, prediction API, admin-token check |
+| Real-Time Security Log Detection | log parsing, each detection rule, end-to-end offline demo |
+
+## Design choices that apply to all three
+
+- **Works without the heavy parts.** Each project has a dependency-light path (hashing embeddings, a JSON
+  vector store, an offline log replay) so it runs and tests anywhere. The production-style components
+  (Ollama, ChromaDB, Kafka, Grafana) plug in behind the same interfaces.
+- **Observable by default.** The two services export Prometheus metrics and come with a provisioned Grafana dashboard.
+- **Small, readable code.** Each `src/` package is a few hundred lines, split by responsibility
+  (loading, indexing, serving, detecting) so it's easy to review.
+
+## Repository layout
 
 ```text
-docs/project-overview.pdf
+.github/workflows/ci.yml                     tests for all three projects
+docs/project-overview.pdf                    architecture and implementation notes (5 pages)
+local-llm-document-qa-rag/                   project 1
+ml-model-deployment-pipeline/                project 2
+real-time-security-log-detection-pipeline/   project 3
+run_all_tests.sh / run_all_tests.ps1         run every test suite
 ```
 
-## Scope
+## Author
 
-These projects are intentionally compact enough to run locally while still demonstrating production-style engineering patterns: package structure, tests, CI, container files, service APIs, monitoring configuration, model/version management, and reproducible sample data.
+**Faiz Ahmed**: MS Computer Science, University of Washington Tacoma · [GitHub](https://github.com/khajafaizahmed)
